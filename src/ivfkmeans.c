@@ -12,7 +12,7 @@
  * https://theory.stanford.edu/~sergei/papers/kMeansPP-soda.pdf
  */
 static void
-InitCenters(Relation index, VectorArray samples, VectorArray centers, pgvector_float *lowerBound)
+InitCenters(Relation index, VectorArray samples, VectorArray centers, PgVectorFloat *lowerBound)
 {
 	FmgrInfo   *procinfo;
 	Oid			collation;
@@ -22,7 +22,7 @@ InitCenters(Relation index, VectorArray samples, VectorArray centers, pgvector_f
 	double		sum;
 	double		choice;
 	Vector	   *vec;
-	pgvector_float	   *weight = palloc(samples->length * sizeof(pgvector_float));
+	PgVectorFloat	   *weight = palloc(samples->length * sizeof(PgVectorFloat));
 	int			numCenters = centers->maxlen;
 	int			numSamples = samples->length;
 
@@ -181,11 +181,11 @@ ElkanKmeans(Relation index, VectorArray samples, VectorArray centers)
 	VectorArray newCenters;
 	int		   *centerCounts;
 	int		   *closestCenters;
-	pgvector_float	   *lowerBound;
-	pgvector_float	   *upperBound;
-	pgvector_float	   *s;
-	pgvector_float	   *halfcdist;
-	pgvector_float	   *newcdist;
+	PgVectorFloat	   *lowerBound;
+	PgVectorFloat	   *upperBound;
+	PgVectorFloat	   *s;
+	PgVectorFloat	   *halfcdist;
+	PgVectorFloat	   *newcdist;
 	int			changes;
 	double		minDistance;
 	int			closestCenter;
@@ -201,11 +201,11 @@ ElkanKmeans(Relation index, VectorArray samples, VectorArray centers)
 	Size		newCentersSize = VECTOR_ARRAY_SIZE(numCenters, dimensions);
 	Size		centerCountsSize = sizeof(int) * numCenters;
 	Size		closestCentersSize = sizeof(int) * numSamples;
-	Size		lowerBoundSize = sizeof(pgvector_float) * numSamples * numCenters;
-	Size		upperBoundSize = sizeof(pgvector_float) * numSamples;
-	Size		sSize = sizeof(pgvector_float) * numCenters;
-	Size		halfcdistSize = sizeof(pgvector_float) * numCenters * numCenters;
-	Size		newcdistSize = sizeof(pgvector_float) * numCenters;
+	Size		lowerBoundSize = sizeof(PgVectorFloat) * numSamples * numCenters;
+	Size		upperBoundSize = sizeof(PgVectorFloat) * numSamples;
+	Size		sSize = sizeof(PgVectorFloat) * numCenters;
+	Size		halfcdistSize = sizeof(PgVectorFloat) * numCenters * numCenters;
+	Size		newcdistSize = sizeof(PgVectorFloat) * numCenters;
 
 	/* Calculate total size */
 	Size		totalSize = samplesSize + centersSize + newCentersSize + centerCountsSize + closestCentersSize + lowerBoundSize + upperBoundSize + sSize + halfcdistSize + newcdistSize;

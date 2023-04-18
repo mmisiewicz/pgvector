@@ -73,7 +73,7 @@ CheckDim(int dim)
  * Ensure finite elements
  */
 static inline void
-CheckElement(pgvector_float value)
+CheckElement(PgVectorFloat value)
 {
 	if (isnan(value))
 		ereport(ERROR,
@@ -145,7 +145,7 @@ vector_in(PG_FUNCTION_ARGS)
 	char	   *str = PG_GETARG_CSTRING(0);
 	int32		typmod = PG_GETARG_INT32(2);
 	int			i;
-	pgvector_float	x[VECTOR_MAX_DIM];
+	PgVectorFloat	x[VECTOR_MAX_DIM];
 	int			dim = 0;
 	char	   *pt;
 	char	   *stringEnd;
@@ -490,8 +490,8 @@ l2_distance(PG_FUNCTION_ARGS)
 {
 	Vector	   *a = PG_GETARG_VECTOR_P(0);
 	Vector	   *b = PG_GETARG_VECTOR_P(1);
-	pgvector_float	   *ax = a->x;
-	pgvector_float	   *bx = b->x;
+	PgVectorFloat	   *ax = a->x;
+	PgVectorFloat	   *bx = b->x;
 	double		distance = 0.0;
 	double		diff;
 
@@ -517,8 +517,8 @@ vector_l2_squared_distance(PG_FUNCTION_ARGS)
 {
 	Vector	   *a = PG_GETARG_VECTOR_P(0);
 	Vector	   *b = PG_GETARG_VECTOR_P(1);
-	pgvector_float	   *ax = a->x;
-	pgvector_float	   *bx = b->x;
+	PgVectorFloat	   *ax = a->x;
+	PgVectorFloat	   *bx = b->x;
 	double		distance = 0.0;
 	double		diff;
 
@@ -543,8 +543,8 @@ inner_product(PG_FUNCTION_ARGS)
 {
 	Vector	   *a = PG_GETARG_VECTOR_P(0);
 	Vector	   *b = PG_GETARG_VECTOR_P(1);
-	pgvector_float	   *ax = a->x;
-	pgvector_float	   *bx = b->x;
+	PgVectorFloat	   *ax = a->x;
+	PgVectorFloat	   *bx = b->x;
 	double		distance = 0.0;
 
 	CheckDims(a, b);
@@ -565,8 +565,8 @@ vector_negative_inner_product(PG_FUNCTION_ARGS)
 {
 	Vector	   *a = PG_GETARG_VECTOR_P(0);
 	Vector	   *b = PG_GETARG_VECTOR_P(1);
-	pgvector_float	   *ax = a->x;
-	pgvector_float	   *bx = b->x;
+	PgVectorFloat	   *ax = a->x;
+	PgVectorFloat	   *bx = b->x;
 	double		distance = 0.0;
 
 	CheckDims(a, b);
@@ -587,8 +587,8 @@ cosine_distance(PG_FUNCTION_ARGS)
 {
 	Vector	   *a = PG_GETARG_VECTOR_P(0);
 	Vector	   *b = PG_GETARG_VECTOR_P(1);
-	pgvector_float	   *ax = a->x;
-	pgvector_float	   *bx = b->x;
+	PgVectorFloat	   *ax = a->x;
+	PgVectorFloat	   *bx = b->x;
 	double		distance = 0.0;
 	double		norma = 0.0;
 	double		normb = 0.0;
@@ -655,7 +655,7 @@ Datum
 vector_norm(PG_FUNCTION_ARGS)
 {
 	Vector	   *a = PG_GETARG_VECTOR_P(0);
-	pgvector_float	   *ax = a->x;
+	PgVectorFloat	   *ax = a->x;
 	double		norm = 0.0;
 
 	/* Auto-vectorized */
@@ -674,10 +674,10 @@ vector_add(PG_FUNCTION_ARGS)
 {
 	Vector	   *a = PG_GETARG_VECTOR_P(0);
 	Vector	   *b = PG_GETARG_VECTOR_P(1);
-	pgvector_float	   *ax = a->x;
-	pgvector_float	   *bx = b->x;
+	PgVectorFloat	   *ax = a->x;
+	PgVectorFloat	   *bx = b->x;
 	Vector	   *result;
-	pgvector_float	   *rx;
+	PgVectorFloat	   *rx;
 
 	CheckDims(a, b);
 
@@ -700,10 +700,10 @@ vector_sub(PG_FUNCTION_ARGS)
 {
 	Vector	   *a = PG_GETARG_VECTOR_P(0);
 	Vector	   *b = PG_GETARG_VECTOR_P(1);
-	pgvector_float	   *ax = a->x;
-	pgvector_float	   *bx = b->x;
+	PgVectorFloat	   *ax = a->x;
+	PgVectorFloat	   *bx = b->x;
 	Vector	   *result;
-	pgvector_float	   *rx;
+	PgVectorFloat	   *rx;
 
 	CheckDims(a, b);
 
@@ -843,7 +843,7 @@ vector_accum(PG_FUNCTION_ARGS)
 	bool		newarr;
 	float8		n;
 	Datum	   *statedatums;
-	pgvector_float	   *x = newval->x;
+	PgVectorFloat	   *x = newval->x;
 	ArrayType  *result;
 
 	/* Check array before using */
@@ -970,7 +970,7 @@ vector_avg(PG_FUNCTION_ARGS)
 	float8		n;
 	uint16		dim;
 	Vector	   *result;
-	pgvector_float		v;
+	PgVectorFloat		v;
 
 	/* Check array before using */
 	statevalues = CheckStateArray(statearray, "vector_avg");

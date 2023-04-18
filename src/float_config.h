@@ -5,7 +5,7 @@
 #define USE_FP16
 
 #ifdef USE_FP16
-typedef __fp16 pgvector_float;
+typedef _Float16 PgVectorFloat;
 #else
 typedef float float_type;
 #endif
