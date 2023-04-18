@@ -304,12 +304,12 @@ vector_typmod_in(PG_FUNCTION_ARGS)
 	PG_RETURN_INT32(*tl);
 }
 
-static inline __fp16
+static inline _Float16
 pq_getmsgfp16(StringInfo buf)
 {
 	uint16 raw_value = pq_getmsgint(buf, sizeof(uint16));
-	__fp16 result;
-	memcpy(&result, &raw_value, sizeof(__fp16));
+	_Float16 result;
+	memcpy(&result, &raw_value, sizeof(_Float16));
 	return result;
 }
 
@@ -352,10 +352,10 @@ vector_recv(PG_FUNCTION_ARGS)
 }
 
 static inline void
-pq_sendfp16(StringInfo buf, __fp16 value)
+pq_sendfp16(StringInfo buf, _Float16 value)
 {
     uint16 raw_value;
-    memcpy(&raw_value, &value, sizeof(__fp16));
+    memcpy(&raw_value, &value, sizeof(_Float16));
     pq_sendint(buf, raw_value, sizeof(uint16));
 }
 

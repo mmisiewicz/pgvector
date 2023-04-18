@@ -25,7 +25,7 @@ COMPILER_NAME = $(shell $(CC) --version | head -n1)
 
 # Enable __fp16 support for GCC
 ifneq (,$(findstring gcc,$(COMPILER_NAME)))
-	CFLAGS = -mfp16-format=ieee
+	CFLAGS = -mfp16-format=ieee -march=native
 endif
 
 # Enable __fp16 support for Clang
