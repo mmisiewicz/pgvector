@@ -1,4 +1,7 @@
+#include "float_config.h"
+
 #include "postgres.h"
+
 
 #include <float.h>
 

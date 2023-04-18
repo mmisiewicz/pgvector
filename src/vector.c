@@ -1,3 +1,4 @@
+#include "float_config.h"
 #include "postgres.h"
 
 #include <math.h>
@@ -72,7 +73,7 @@ CheckDim(int dim)
  * Ensure finite elements
  */
 static inline void
-CheckElement(float value)
+CheckElement(pgvector_float value)
 {
 	if (isnan(value))
 		ereport(ERROR,
@@ -144,7 +145,7 @@ vector_in(PG_FUNCTION_ARGS)
 	char	   *str = PG_GETARG_CSTRING(0);
 	int32		typmod = PG_GETARG_INT32(2);
 	int			i;
-	float		x[VECTOR_MAX_DIM];
+	pgvector_float	x[VECTOR_MAX_DIM];
 	int			dim = 0;
 	char	   *pt;
 	char	   *stringEnd;
@@ -303,6 +304,15 @@ vector_typmod_in(PG_FUNCTION_ARGS)
 	PG_RETURN_INT32(*tl);
 }
 
+static inline __fp16
+pq_getmsgfp16(StringInfo buf)
+{
+	uint16 raw_value = pq_getmsgint(buf, sizeof(uint16));
+	__fp16 result;
+	memcpy(&result, &raw_value, sizeof(__fp16));
+	return result;
+}
+
 /*
  * Convert external binary representation to internal representation
  */
@@ -329,11 +339,26 @@ vector_recv(PG_FUNCTION_ARGS)
 				 errmsg("expected unused to be 0, not %d", unused)));
 
 	result = InitVector(dim);
-	for (i = 0; i < dim; i++)
-		result->x[i] = pq_getmsgfloat4(buf);
+	for (i = 0; i < dim; i++) {
+		#ifdef USE_FP16
+	    result->x[i] = pq_getmsgfp16(buf);
+		#else
+    	result->x[i] = pq_getmsgfloat4(buf);
+		#endif
+	}
+
 
 	PG_RETURN_POINTER(result);
 }
+
+static inline void
+pq_sendfp16(StringInfo buf, __fp16 value)
+{
+    uint16 raw_value;
+    memcpy(&raw_value, &value, sizeof(__fp16));
+    pq_sendint(buf, raw_value, sizeof(uint16));
+}
+
 
 /*
  * Convert internal representation to the external binary representation
@@ -349,8 +374,13 @@ vector_send(PG_FUNCTION_ARGS)
 	pq_begintypsend(&buf);
 	pq_sendint(&buf, vec->dim, sizeof(int16));
 	pq_sendint(&buf, vec->unused, sizeof(int16));
-	for (i = 0; i < vec->dim; i++)
-		pq_sendfloat4(&buf, vec->x[i]);
+	for (i = 0; i < vec->dim; i++) {
+	#ifdef USE_FP16
+    	pq_sendfp16(&buf, vec->x[i]);
+	#else
+    	pq_sendfloat4(&buf, vec->x[i]);
+	#endif
+	}
 
 	PG_RETURN_BYTEA_P(pq_endtypsend(&buf));
 }
@@ -443,7 +473,7 @@ vector_to_float4(PG_FUNCTION_ARGS)
 	d = (Datum *) palloc(sizeof(Datum) * vec->dim);
 
 	for (i = 0; i < vec->dim; i++)
-		d[i] = Float4GetDatum(vec->x[i]);
+		d[i] = Float4GetDatum((float4)vec->x[i]);
 
 	/* Use TYPALIGN_INT for float4 */
 	result = construct_array(d, vec->dim, FLOAT4OID, sizeof(float4), true, TYPALIGN_INT);
@@ -460,8 +490,8 @@ l2_distance(PG_FUNCTION_ARGS)
 {
 	Vector	   *a = PG_GETARG_VECTOR_P(0);
 	Vector	   *b = PG_GETARG_VECTOR_P(1);
-	float	   *ax = a->x;
-	float	   *bx = b->x;
+	pgvector_float	   *ax = a->x;
+	pgvector_float	   *bx = b->x;
 	double		distance = 0.0;
 	double		diff;
 
@@ -487,8 +517,8 @@ vector_l2_squared_distance(PG_FUNCTION_ARGS)
 {
 	Vector	   *a = PG_GETARG_VECTOR_P(0);
 	Vector	   *b = PG_GETARG_VECTOR_P(1);
-	float	   *ax = a->x;
-	float	   *bx = b->x;
+	pgvector_float	   *ax = a->x;
+	pgvector_float	   *bx = b->x;
 	double		distance = 0.0;
 	double		diff;
 
@@ -513,8 +543,8 @@ inner_product(PG_FUNCTION_ARGS)
 {
 	Vector	   *a = PG_GETARG_VECTOR_P(0);
 	Vector	   *b = PG_GETARG_VECTOR_P(1);
-	float	   *ax = a->x;
-	float	   *bx = b->x;
+	pgvector_float	   *ax = a->x;
+	pgvector_float	   *bx = b->x;
 	double		distance = 0.0;
 
 	CheckDims(a, b);
@@ -535,8 +565,8 @@ vector_negative_inner_product(PG_FUNCTION_ARGS)
 {
 	Vector	   *a = PG_GETARG_VECTOR_P(0);
 	Vector	   *b = PG_GETARG_VECTOR_P(1);
-	float	   *ax = a->x;
-	float	   *bx = b->x;
+	pgvector_float	   *ax = a->x;
+	pgvector_float	   *bx = b->x;
 	double		distance = 0.0;
 
 	CheckDims(a, b);
@@ -557,8 +587,8 @@ cosine_distance(PG_FUNCTION_ARGS)
 {
 	Vector	   *a = PG_GETARG_VECTOR_P(0);
 	Vector	   *b = PG_GETARG_VECTOR_P(1);
-	float	   *ax = a->x;
-	float	   *bx = b->x;
+	pgvector_float	   *ax = a->x;
+	pgvector_float	   *bx = b->x;
 	double		distance = 0.0;
 	double		norma = 0.0;
 	double		normb = 0.0;
@@ -625,7 +655,7 @@ Datum
 vector_norm(PG_FUNCTION_ARGS)
 {
 	Vector	   *a = PG_GETARG_VECTOR_P(0);
-	float	   *ax = a->x;
+	pgvector_float	   *ax = a->x;
 	double		norm = 0.0;
 
 	/* Auto-vectorized */
@@ -644,10 +674,10 @@ vector_add(PG_FUNCTION_ARGS)
 {
 	Vector	   *a = PG_GETARG_VECTOR_P(0);
 	Vector	   *b = PG_GETARG_VECTOR_P(1);
-	float	   *ax = a->x;
-	float	   *bx = b->x;
+	pgvector_float	   *ax = a->x;
+	pgvector_float	   *bx = b->x;
 	Vector	   *result;
-	float	   *rx;
+	pgvector_float	   *rx;
 
 	CheckDims(a, b);
 
@@ -670,10 +700,10 @@ vector_sub(PG_FUNCTION_ARGS)
 {
 	Vector	   *a = PG_GETARG_VECTOR_P(0);
 	Vector	   *b = PG_GETARG_VECTOR_P(1);
-	float	   *ax = a->x;
-	float	   *bx = b->x;
+	pgvector_float	   *ax = a->x;
+	pgvector_float	   *bx = b->x;
 	Vector	   *result;
-	float	   *rx;
+	pgvector_float	   *rx;
 
 	CheckDims(a, b);
 
@@ -813,7 +843,7 @@ vector_accum(PG_FUNCTION_ARGS)
 	bool		newarr;
 	float8		n;
 	Datum	   *statedatums;
-	float	   *x = newval->x;
+	pgvector_float	   *x = newval->x;
 	ArrayType  *result;
 
 	/* Check array before using */
@@ -940,7 +970,7 @@ vector_avg(PG_FUNCTION_ARGS)
 	float8		n;
 	uint16		dim;
 	Vector	   *result;
-	float		v;
+	pgvector_float		v;
 
 	/* Check array before using */
 	statevalues = CheckStateArray(statearray, "vector_avg");

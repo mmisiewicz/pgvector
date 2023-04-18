@@ -1,7 +1,10 @@
 #ifndef IVFFLAT_H
 #define IVFFLAT_H
 
+#include "float_config.h"
+
 #include "postgres.h"
+
 
 #if PG_VERSION_NUM < 110000
 #error "Requires PostgreSQL 11+"

@@ -1,3 +1,7 @@
+## 0.5.0 (WIP)
+
+- Half precision support.
+
 ## 0.4.2 (unreleased)
 
 - Added notice when index created with little data

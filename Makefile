@@ -1,5 +1,5 @@
 EXTENSION = vector
-EXTVERSION = 0.4.1
+EXTVERSION = 0.5.0
 
 MODULE_big = vector
 DATA = $(wildcard sql/*--*.sql)
@@ -11,6 +11,7 @@ REGRESS_OPTS = --inputdir=test --load-extension=vector
 
 OPTFLAGS = -march=native
 
+
 # Mac ARM doesn't support -march=native
 ifeq ($(shell uname -s), Darwin)
 	ifeq ($(shell uname -p), arm)
@@ -19,10 +20,23 @@ ifeq ($(shell uname -s), Darwin)
 	endif
 endif
 
+# Check if the compiler is GCC or Clang
+COMPILER_NAME = $(shell $(CC) --version | head -n1)
+
+# Enable __fp16 support for GCC
+ifneq (,$(findstring gcc,$(COMPILER_NAME)))
+	CFLAGS = -mfp16-format=ieee
+endif
+
+# Enable __fp16 support for Clang
+ifneq (,$(findstring clang,$(COMPILER_NAME)))
+	CFLAGS = -mf16c
+endif
+
 # For auto-vectorization:
 # - GCC (needs -ftree-vectorize OR -O3) - https://gcc.gnu.org/projects/tree-ssa/vectorization.html
 # - Clang (could use pragma instead) - https://llvm.org/docs/Vectorizers.html
-PG_CFLAGS += $(OPTFLAGS) -ftree-vectorize -fassociative-math -fno-signed-zeros -fno-trapping-math
+PG_CFLAGS += $(OPTFLAGS) $(CFLAGS) -ftree-vectorize -fassociative-math -fno-signed-zeros -fno-trapping-math
 
 # Debug GCC auto-vectorization
 # PG_CFLAGS += -fopt-info-vec
@@ -62,4 +76,4 @@ dist:
 .PHONY: docker
 
 docker:
-	docker build --pull --no-cache --platform linux/amd64 -t ankane/pgvector:latest .
+	docker build --pull --no-cache --platform linux/amd64 -t mmisiewicz/pgvector16:latest .
